@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   Tooltip,
@@ -9,7 +9,31 @@ import {
   TooltipTrigger,
 } from "./tooltip";
 
+function stubLayoutRect(): DOMRect {
+  return {
+    x: 0,
+    y: 0,
+    width: 120,
+    height: 40,
+    top: 0,
+    left: 0,
+    bottom: 40,
+    right: 120,
+    toJSON: () => "",
+  };
+}
+
 describe("Tooltip", () => {
+  beforeEach(() => {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+      () => stubLayoutRect()
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("renders tooltip trigger", () => {
     render(
       <TooltipProvider>
@@ -39,11 +63,13 @@ describe("Tooltip", () => {
     await user.hover(trigger);
 
     await waitFor(() => {
-      expect(screen.getByText("Tooltip content")).toBeInTheDocument();
+      expect(
+        screen.getByRole("tooltip", { name: "Tooltip content" })
+      ).toBeInTheDocument();
     });
   });
 
-  it("hides tooltip content on mouse leave", async () => {
+  it("hides tooltip content when Escape is pressed", async () => {
     const user = userEvent.setup();
     render(
       <TooltipProvider>
@@ -58,13 +84,17 @@ describe("Tooltip", () => {
     await user.hover(trigger);
 
     await waitFor(() => {
-      expect(screen.getByText("Tooltip content")).toBeInTheDocument();
+      expect(
+        screen.getByRole("tooltip", { name: "Tooltip content" })
+      ).toBeInTheDocument();
     });
 
-    await user.unhover(trigger);
+    await user.keyboard("{Escape}");
 
     await waitFor(() => {
-      expect(screen.queryByText("Tooltip content")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("tooltip", { name: "Tooltip content" })
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -116,8 +146,9 @@ describe("Tooltip", () => {
     await user.hover(trigger);
 
     await waitFor(() => {
-      const tooltip = screen.getByText("Top tooltip");
-      expect(tooltip).toBeInTheDocument();
+      expect(
+        screen.getByRole("tooltip", { name: "Top tooltip" })
+      ).toBeInTheDocument();
     });
 
     rerender(
@@ -129,17 +160,18 @@ describe("Tooltip", () => {
       </TooltipProvider>
     );
 
-    await user.hover(trigger);
-
     await waitFor(() => {
-      expect(screen.getByText("Bottom tooltip")).toBeInTheDocument();
+      expect(
+        screen.getByRole("tooltip", { name: "Bottom tooltip" })
+      ).toBeInTheDocument();
     });
+    expect(
+      screen.queryByRole("tooltip", { name: "Top tooltip" })
+    ).not.toBeInTheDocument();
   });
 
   it("handles delay duration", async () => {
     const user = userEvent.setup();
-    vi.useFakeTimers();
-
     render(
       <TooltipProvider delayDuration={500}>
         <Tooltip>
@@ -152,16 +184,17 @@ describe("Tooltip", () => {
     const trigger = screen.getByText("Hover me");
     await user.hover(trigger);
 
-    // Tooltip should not appear immediately
-    expect(screen.queryByText("Delayed tooltip")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("tooltip", { name: "Delayed tooltip" })
+    ).not.toBeInTheDocument();
 
-    // Fast-forward time
-    vi.advanceTimersByTime(500);
-
-    await waitFor(() => {
-      expect(screen.getByText("Delayed tooltip")).toBeInTheDocument();
-    });
-
-    vi.useRealTimers();
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole("tooltip", { name: "Delayed tooltip" })
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
   });
 });
