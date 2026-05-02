@@ -1,14 +1,14 @@
 import { memo, useMemo, useRef } from "react";
 
+import { useIsTruncated } from "@/hooks/use-is-truncated";
+import { cn } from "@/lib/utils";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "./tooltip";
-
-import { cn } from "@/lib/utils";
-import { useIsTruncated } from "@/hooks/use-is-truncated";
 
 const LINE_CLAMP_MAP: Record<number, string> = {
   1: "wui-line-clamp-1",

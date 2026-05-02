@@ -1,15 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
 import { disableAllExcept, commonArgTypes } from "@/lib/storybook-utils";
 
 import { Button } from "../button/button";
 
+import { ButtonTooltip } from "./button-tooltip";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "./tooltip";
-import { ButtonTooltip } from "./button-tooltip";
 
 const meta: Meta = {
   title: "UI/ButtonTooltip",
